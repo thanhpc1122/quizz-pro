@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="NebulaQuiz Studio — Nền tảng luyện tập trắc nghiệm & Flashcard cá nhân hiệu suất cao" />
+  <title>NebulaQuiz Studio — Personal Learning & Quiz Arena</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheet (Phase 3.2) -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Mammoth.js CDN để đọc trực tiếp file Word (.docx) trên trình duyệt -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js" defer></script>
+  <!-- Main Application Logic (Phase 3.3) -->
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <!-- Hiệu ứng ánh sáng nền Ambient 3D/2D -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb orb-primary"></div>
+    <div class="ambient-orb orb-secondary"></div>
+    <div class="ambient-orb orb-accent"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <!-- =========================================================================
+       TOP NAVIGATION BAR
+       ========================================================================= -->
+  <header class="app-header" role="banner">
+    <div class="header-container">
+      <div class="brand-identity" id="brandHomeBtn" role="button" tabindex="0" aria-label="Về trang chủ cấu hình">
+        <div class="brand-logo">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="36" height="36" rx="10" fill="url(#logoGrad)" />
+            <path d="M11 18.5L16 23.5L25.5 13" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="26" cy="10" r="2.5" fill="#38BDF8" />
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6366F1" />
+                <stop offset="1" stop-color="#A855F7" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">NebulaQuiz</span>
+          <span class="brand-badge">STUDIO</span>
+        </div>
+      </div>
+
+      <!-- Trạng thái file hiện tại trên thanh Header -->
+      <div class="header-status" id="headerDatasetBadge" hidden>
+        <span class="status-dot"></span>
+        <span class="status-filename" id="headerFileName">Chưa tải tài liệu</span>
+        <span class="status-count" id="headerQuestionCount">0 câu</span>
+      </div>
+
+      <!-- Cụm nút công cụ Header -->
+      <div class="header-actions">
+        <button type="button" class="btn-icon" id="openShortcutsBtn" title="Phím tắt bàn phím (?)" aria-label="Xem phím tắt bàn phím">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10" />
+          </svg>
+        </button>
+        <button type="button" class="btn-icon" id="soundToggleBtn" data-sound="on" title="Bật/Tắt hiệu ứng âm thanh" aria-label="Bật hoặc tắt âm thanh">
+          <svg class="icon-sound-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+          </svg>
+        </button>
+        <button type="button" class="btn-icon" id="themeToggleBtn" title="Chuyển đổi giao diện Sáng/Tối" aria-label="Đổi giao diện Sáng hoặc Tối">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MAIN WORKSPACE CONTAINER
+       ========================================================================= -->
+  <main class="app-main" id="appMain">
+
+    <!-- =======================================================================
+         VIEW 1: HOME / FILE UPLOAD & QUIZ SETUP DASHBOARD
+         ======================================================================= -->
+    <section class="view-section active" id="viewSetup" aria-labelledby="setupHeading">
+      <div class="hero-intro">
+        <div class="hero-pill">✨ Không gian tự luyện tập trắc nghiệm cá nhân</div>
+        <h1 id="setupHeading" class="hero-title">Tải tài liệu lên và làm chủ kiến thức của bạn</h1>
+        <p class="hero-subtitle">
+          Hỗ trợ đọc trực tiếp file Word (<strong>.docx</strong>), tự động nhận diện câu hỏi, kiểm tra lỗi định dạng, xáo trộn thông minh và phân tích chuyên sâu.
+        </p>
+      </div>
+
+      <div class="setup-grid">
+        <!-- CỘT TRÁI: MANDATORY FILE UPLOAD MODULE -->
+        <div class="glass-card upload-card">
+          <div class="card-header">
+            <div class="card-step-badge">Bước 1</div>
+            <h2 class="card-title">Nguồn dữ liệu câu hỏi</h2>
+          </div>
+
+          <!-- Input file ẩn kết nối với nút Add File rõ ràng -->
+          <input
+            type="file"
+            id="fileInput"
+            class="sr-only"
+            accept=".docx,.txt,.json,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/json"
+            aria-label="Chọn file câu hỏi từ máy tính (.docx, .txt, .json)"
+          />
+
+          <!-- Vùng Kéo-Thả & Nút Add File bắt buộc -->
+          <div class="upload-dropzone" id="uploadDropzone" role="region" aria-label="Khu vực tải file câu hỏi">
+            <div class="dropzone-visual">
+              <div class="dropzone-icon-ring">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </div>
+            </div>
+            <h3 class="dropzone-heading">Kéo thả file câu hỏi vào đây</h3>
+            <p class="dropzone-hint">Hỗ trợ định dạng <strong>.docx</strong> (Word), <strong>.txt</strong> hoặc <strong>.json</strong></p>
+
+            <div class="dropzone-actions">
+              <label for="fileInput" class="btn btn-primary btn-add-file" id="addFileBtn" role="button" tabindex="0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="12" y1="18" x2="12" y2="12" />
+                  <line x1="9" y1="15" x2="15" y2="15" />
+                </svg>
+                <span>Add File (.docx)</span>
+              </label>
+
+              <button type="button" class="btn btn-ghost" id="openFormatGuideBtn">
+                Xem quy chuẩn định dạng file
+              </button>
+            </div>
+          </div>
+
+          <!-- Trạng thái Đang xử lý (Loading State) -->
+          <div class="upload-status-box status-loading" id="uploadLoadingState" hidden aria-live="polite">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="status-content">
+              <h4>Đang đọc và phân tích cấu trúc tài liệu...</h4>
+              <p id="loadingStepText">Đang trích xuất văn bản từ file Word...</p>
+            </div>
+          </div>
+
+          <!-- Trạng thái Lỗi File / Sai định dạng (Error State) -->
+          <div class="upload-status-box status-error" id="uploadErrorState" hidden role="alert">
+            <div class="status-icon error-icon" aria-hidden="true">!</div>
+            <div class="status-content">
+              <h4 id="uploadErrorTitle">Không thể đọc file</h4>
+              <p id="uploadErrorMessage">Định dạng file không được hỗ trợ hoặc không tìm thấy câu hỏi hợp lệ.</p>
+              <button type="button" class="btn btn-sm btn-outline-danger" id="retryUploadBtn">Thử chọn lại file khác</button>
+            </div>
+          </div>
+
+          <!-- Thông tin File đã chọn & Kết quả Kiểm duyệt (Selected File Card) -->
+          <div class="selected-file-panel" id="selectedFilePanel" hidden>
+            <div class="file-info-row">
+              <div class="file-type-badge" id="fileExtBadge">DOCX</div>
+              <div class="file-meta">
+                <h4 class="file-name" id="selectedFileName">Bộ câu hỏi chương 1 đã chỉnh sửa.docx</h4>
+                <p class="file-size" id="selectedFileMeta">Đã phân tích thành công</p>
+              </div>
+              <div class="file-controls">
+                <label for="fileInput" class="btn btn-sm btn-secondary" title="Thay thế bằng file khác">
+                  Đổi file
+                </label>
+                <button type="button" class="btn btn-sm btn-danger-ghost" id="removeFileBtn" title="Xóa file hiện tại">
+                  Xóa
+                </button>
+              </div>
+            </div>
+
+            <!-- Thống kê kết quả Parse dữ liệu -->
+            <div class="parse-summary-grid">
+              <div class="summary-stat stat-valid">
+                <span class="stat-value" id="parsedValidCount">0</span>
+                <span class="stat-label">Câu hợp lệ</span>
+              </div>
+              <div class="summary-stat stat-sections">
+                <span class="stat-value" id="parsedSectionCount">0</span>
+                <span class="stat-label">Phần / Chương</span>
+              </div>
+              <div class="summary-stat stat-warning" id="parsedInvalidCard">
+                <span class="stat-value" id="parsedInvalidCount">0</span>
+                <span class="stat-label">Câu lỗi định dạng</span>
+              </div>
+            </div>
+
+            <!-- Danh sách cảnh báo nếu trong file có câu thiếu dấu * hoặc thiếu đáp án -->
+            <div class="validation-warnings" id="validationWarningsBox" hidden>
+              <div class="warning-header">
+                <strong>⚠️ Phát hiện một số câu hỏi không đúng chuẩn (đã tự động bỏ qua):</strong>
+                <button type="button" class="btn-link" id="toggleWarningListBtn">Xem chi tiết</button>
+              </div>
+              <ul class="warning-list" id="validationWarningList" hidden></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- CỘT PHẢI: CẤU HÌNH BÀI LUYỆN TẬP (QUIZ CONFIGURATION) -->
+        <div class="glass-card config-card" id="quizConfigCard" aria-disabled="true">
+          <div class="card-header">
+            <div class="card-step-badge">Bước 2</div>
+            <h2 class="card-title">Thiết lập thông số luyện tập</h2>
+          </div>
+
+          <form id="quizConfigForm" novalidate>
+            <!-- 1. Chế độ luyện tập -->
+            <div class="form-group">
+              <label class="form-label">Chế độ trải nghiệm (Learning Mode)</label>
+              <div class="mode-selector" role="radiogroup" aria-label="Chọn chế độ luyện tập">
+                <label class="mode-option">
+                  <input type="radio" name="quizMode" value="instant" checked />
+                  <div class="mode-box">
+                    <div class="mode-box-header">
+                      <span class="mode-icon">⚡</span>
+                      <span class="mode-name">Phản hồi tức thì (Quizizz Mode)</span>
+                    </div>
+                    <p class="mode-desc">Biết ngay đáp án Đúng/Sai sau mỗi lần chọn, tính chuỗi Streak và điểm thưởng trực tiếp.</p>
+                  </div>
+                </label>
+
+                <label class="mode-option">
+                  <input type="radio" name="quizMode" value="exam" />
+                  <div class="mode-box">
+                    <div class="mode-box-header">
+                      <span class="mode-icon">📝</span>
+                      <span class="mode-name">Thi thử tiêu chuẩn (Exam Mode)</span>
+                    </div>
+                    <p class="mode-desc">Tự do thay đổi đáp án giữa các câu, chỉ chấm điểm và xem đáp án sau khi nhấn Nộp bài.</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- 2. Lọc theo Phần / Chương (nếu file có chia Phần) -->
+            <div class="form-group" id="sectionFilterGroup">
+              <label for="sectionSelect" class="form-label">Lọc theo Phần / Chủ đề trong tài liệu</label>
+              <select id="sectionSelect" class="form-select">
+                <option value="all">Tất cả các phần (Toàn bộ tài liệu)</option>
+              </select>
+            </div>
+
+            <!-- 3. Chọn khoảng câu hỏi (Question Range A -> B) -->
+            <div class="form-group">
+              <div class="label-row">
+                <label class="form-label">Khoảng câu hỏi muốn luyện tập (Từ câu A đến câu B)</label>
+                <span class="range-available-hint" id="rangeAvailableHint">Khả dụng: 0 - 0</span>
+              </div>
+              <div class="range-inputs-row">
+                <div class="range-input-wrap">
+                  <span class="input-prefix">Từ câu</span>
+                  <input type="number" id="rangeStartInput" class="form-input" min="1" max="1" value="1" disabled />
+                </div>
+                <span class="range-separator">→</span>
+                <div class="range-input-wrap">
+                  <span class="input-prefix">Đến câu</span>
+                  <input type="number" id="rangeEndInput" class="form-input" min="1" max="1" value="1" disabled />
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary" id="resetRangeBtn" disabled>Tất cả</button>
+              </div>
+              <p class="field-error" id="rangeErrorText" hidden>Khoảng câu hỏi không hợp lệ.</p>
+            </div>
+
+            <!-- 4. Tùy chọn Xáo trộn Độc lập (Independent Shuffling) -->
+            <div class="form-group">
+              <label class="form-label">Tùy chọn xáo trộn (Shuffling Controls)</label>
+              <div class="toggle-list">
+                <label class="toggle-item" for="shuffleQuestionsToggle">
+                  <div class="toggle-info">
+                    <span class="toggle-title">🔀 Xáo trộn thứ tự câu hỏi</span>
+                    <span class="toggle-sub">Đảo ngẫu nhiên vị trí các câu nhưng vẫn hiển thị số thứ tự câu gốc.</span>
+                  </div>
+                  <input type="checkbox" id="shuffleQuestionsToggle" class="toggle-checkbox" />
+                  <span class="toggle-switch"></span>
+                </label>
+
+                <label class="toggle-item" for="shuffleOptionsToggle">
+                  <div class="toggle-info">
+                    <span class="toggle-title">🎲 Xáo trộn vị trí đáp án (A, B, C, D)</span>
+                    <span class="toggle-sub">Đảo ngẫu nhiên 4 lựa chọn trong mỗi câu để tránh học vẹt vị trí.</span>
+                  </div>
+                  <input type="checkbox" id="shuffleOptionsToggle" class="toggle-checkbox" />
+                  <span class="toggle-switch"></span>
+                </label>
+
+                <label class="toggle-item" for="autoAdvanceToggle">
+                  <div class="toggle-info">
+                    <span class="toggle-title">⏩ Tự động chuyển câu tiếp theo</span>
+                    <span class="toggle-sub">Tự chuyển sang câu kế tiếp sau 1.2 giây khi chọn xong đáp án.</span>
+                  </div>
+                  <input type="checkbox" id="autoAdvanceToggle" class="toggle-checkbox" />
+                  <span class="toggle-switch"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Nút Bắt đầu bài làm -->
+            <div class="config-footer">
+              <div class="ready-summary" id="readySummaryText">
+                Vui lòng tải lên file câu hỏi (.docx) ở Bước 1 để bắt đầu.
+              </div>
+              <button type="submit" class="btn btn-primary btn-lg btn-start-quiz" id="startQuizBtn" disabled>
+                <span>Bắt đầu luyện tập</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 2: ACTIVE QUIZ ARENA (GIAO DIỆN LÀM BÀI & ĐIỀU HƯỚNG)
+         ======================================================================= -->
+    <section class="view-section" id="viewQuiz" aria-labelledby="quizArenaHeading" hidden>
+      <h2 id="quizArenaHeading" class="sr-only">Không gian làm bài trắc nghiệm</h2>
+
+      <!-- Thanh HUD trạng thái phía trên bài thi -->
+      <div class="quiz-hud glass-card">
+        <div class="hud-left">
+          <button type="button" class="btn btn-sm btn-ghost" id="quitQuizBtn" title="Thoát về màn hình cấu hình">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            <span>Thoát</span>
+          </button>
+          <div class="hud-divider"></div>
+          <div class="hud-mode-badge" id="hudModeBadge">⚡ Quizizz Mode</div>
+        </div>
+
+        <!-- Thanh tiến độ trung tâm -->
+        <div class="hud-progress-wrap">
+          <div class="hud-progress-labels">
+            <span id="hudProgressCounter">Câu 1 / 50</span>
+            <span id="hudAnsweredCounter">Đã trả lời: 0/50</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="hudProgressBarTrack">
+            <div class="progress-fill" id="hudProgressFill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Cụm chỉ số Game hóa: Streak, Điểm số, Thời gian -->
+        <div class="hud-stats">
+          <div class="hud-stat-pill streak-pill" id="hudStreakPill" title="Chuỗi trả lời đúng liên tiếp">
+            <span class="stat-emoji">🔥</span>
+            <span class="stat-num" id="hudStreakValue">0</span>
+          </div>
+          <div class="hud-stat-pill score-pill" id="hudScorePill" title="Số câu đúng hiện tại">
+            <span class="stat-emoji">🎯</span>
+            <span class="stat-num" id="hudLiveScore">0</span>
+          </div>
+          <div class="hud-stat-pill timer-pill" title="Thời gian làm bài">
+            <span class="stat-emoji">⏱️</span>
+            <span class="stat-num mono" id="hudTimerValue">00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bố cục 2 cột: Vùng Câu hỏi chính & Bảng Bản đồ Câu hỏi (Navigator) -->
+      <div class="quiz-workspace">
+        <!-- CỘT CHÍNH: QUESTION STAGE -->
+        <div class="question-stage-container">
+          <article class="glass-card question-card" id="questionCard" aria-live="polite">
+            <!-- Header của Thẻ Câu hỏi: Hiển thị câu hiện tại + Số câu gốc + Tên Phần -->
+            <header class="q-card-header">
+              <div class="q-badges">
+                <span class="q-current-badge" id="qCurrentIndexBadge">Câu #1</span>
+                <span class="q-origin-badge" id="qOriginalNumberBadge" title="Số thứ tự câu hỏi gốc trong file tài liệu">
+                  Gốc: Câu 1
+                </span>
+                <span class="q-section-badge" id="qSectionBadge">Phần 1</span>
+              </div>
+
+              <div class="q-actions">
+                <button type="button" class="btn-flag" id="flagQuestionBtn" aria-pressed="false" title="Đánh dấu câu hỏi phân vân (Phím F)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                    <line x1="4" y1="22" x2="4" y2="15" />
+                  </svg>
+                  <span>Đánh dấu</span>
+                </button>
+              </div>
+            </header>
+
+            <!-- Nội dung câu hỏi -->
+            <div class="q-body">
+              <h3 class="q-text" id="questionText">Đang tải nội dung câu hỏi...</h3>
+            </div>
+
+            <!-- Danh sách 4 lựa chọn A, B, C, D -->
+            <div class="options-grid" id="optionsGrid" role="radiogroup" aria-label="Các lựa chọn trả lời">
+              <!-- Các nút đáp án sẽ được render động bằng JS với ID ổn định, dưới đây là cấu trúc mẫu -->
+              <button type="button" class="option-card" data-option-index="0">
+                <span class="option-key">A</span>
+                <span class="option-text">Lựa chọn A</span>
+                <span class="option-state-icon" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="option-card" data-option-index="1">
+                <span class="option-key">B</span>
+                <span class="option-text">Lựa chọn B</span>
+                <span class="option-state-icon" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="option-card" data-option-index="2">
+                <span class="option-key">C</span>
+                <span class="option-text">Lựa chọn C</span>
+                <span class="option-state-icon" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="option-card" data-option-index="3">
+                <span class="option-key">D</span>
+                <span class="option-text">Lựa chọn D</span>
+                <span class="option-state-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <!-- Hộp Phản hồi tức thì & Giải thích (Tách biệt rõ Giải thích từ File nguồn vs Hệ thống) -->
+            <div class="q-feedback-banner" id="questionFeedbackBanner" hidden>
+              <div class="feedback-status-row">
+                <span class="feedback-badge" id="feedbackStatusBadge">Chính xác!</span>
+                <span class="feedback-correct-answer" id="feedbackCorrectText"></span>
+              </div>
+              <!-- Giải thích từ file gốc (nếu có) -->
+              <div class="explanation-box source-explanation" id="sourceExplanationBox" hidden>
+                <div class="explanation-tag">📄 Giải thích từ tài liệu gốc:</div>
+                <p id="sourceExplanationText"></p>
+              </div>
+            </div>
+
+            <!-- Thanh điều hướng dưới chân câu hỏi -->
+            <footer class="q-card-footer">
+              <button type="button" class="btn btn-secondary" id="prevQuestionBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                <span>Câu trước <kbd>←</kbd></span>
+              </button>
+
+              <div class="keyboard-hint">
+                Nhấn phím <kbd>1</kbd>-<kbd>4</kbd> hoặc <kbd>A</kbd>-<kbd>D</kbd> để chọn • <kbd>F</kbd> đánh dấu
+              </div>
+
+              <div class="footer-right-btns">
+                <button type="button" class="btn btn-primary" id="nextQuestionBtn">
+                  <span>Câu tiếp <kbd>→</kbd></span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </button>
+              </div>
+            </footer>
+          </article>
+        </div>
+
+        <!-- CỘT PHẢI: QUESTION NAVIGATOR PALETTE (BẢN ĐỒ CÂU HỎI) -->
+        <aside class="glass-card navigator-sidebar" aria-label="Bảng điều hướng danh sách câu hỏi">
+          <div class="nav-sidebar-header">
+            <h3 class="nav-sidebar-title">Danh sách câu hỏi</h3>
+            <span class="unanswered-pill" id="unansweredCountBadge">Còn trống: 0</span>
+          </div>
+
+          <!-- Bộ lọc nhanh trên bảng điều hướng -->
+          <div class="nav-filter-tabs" role="tablist" aria-label="Lọc nút điều hướng câu hỏi">
+            <button type="button" class="nav-tab active" data-nav-filter="all" role="tab" aria-selected="true">Tất cả</button>
+            <button type="button" class="nav-tab" data-nav-filter="unanswered" role="tab" aria-selected="false">Chưa làm</button>
+            <button type="button" class="nav-tab" data-nav-filter="flagged" role="tab" aria-selected="false">Đánh dấu</button>
+          </div>
+
+          <!-- Lưới các ô số câu hỏi -->
+          <div class="palette-grid" id="questionPaletteGrid" role="navigation" aria-label="Chọn nhanh câu hỏi">
+            <!-- Render động bằng JS -->
+          </div>
+
+          <!-- Chú thích màu sắc trạng thái -->
+          <div class="palette-legend">
+            <div class="legend-item"><span class="dot dot-current"></span> Đang xem</div>
+            <div class="legend-item"><span class="dot dot-answered"></span> Đã chọn</div>
+            <div class="legend-item"><span class="dot dot-flagged"></span> Đánh dấu</div>
+            <div class="legend-item"><span class="dot dot-correct"></span> Đúng</div>
+            <div class="legend-item"><span class="dot dot-wrong"></span> Sai</div>
+          </div>
+
+          <!-- Nút Nộp bài & Kết thúc -->
+          <div class="nav-sidebar-footer">
+            <button type="button" class="btn btn-accent btn-block" id="submitQuizBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <span>Nộp bài & Xem kết quả</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         VIEW 3: RESULTS, SCORE ANALYTICS & ANSWER REVIEW
+         ======================================================================= -->
+    <section class="view-section" id="viewResults" aria-labelledby="resultsHeading" hidden>
+      <!-- Banner Tổng kết Điểm số -->
+      <div class="glass-card results-hero-card">
+        <div class="results-overview-grid">
+          <!-- Vòng tròn biểu đồ tỷ lệ chính xác (SVG Ring) -->
+          <div class="score-ring-container">
+            <svg class="score-ring-svg" viewBox="0 0 160 160">
+              <circle class="ring-bg" cx="80" cy="80" r="68" stroke-width="12" fill="none" />
+              <circle
+                class="ring-progress"
+                id="resultScoreRing"
+                cx="80"
+                cy="80"
+                r="68"
+                stroke-width="12"
+                fill="none"
+                stroke-dasharray="427.25"
+                stroke-dashoffset="427.25"
+                stroke-linecap="round"
+              />
+            </svg>
+            <div class="score-ring-center">
+              <span class="score-percentage" id="resultPercentValue">0%</span>
+              <span class="score-grade-tag" id="resultGradeTag">Hoàn thành</span>
+            </div>
+          </div>
+
+          <!-- Thông điệp & Thống kê chi tiết -->
+          <div class="results-summary-content">
+            <div class="results-meta-pill" id="resultSessionMeta">Chế độ luyện tập • Toàn bộ câu hỏi</div>
+            <h2 id="resultsHeading" class="results-title">Tổng kết phiên luyện tập</h2>
+            <p class="results-feedback-msg" id="resultsFeedbackText">
+              Dưới đây là phân tích chi tiết kết quả làm bài của bạn.
+            </p>
+
+            <div class="metrics-grid">
+              <div class="metric-card metric-correct">
+                <span class="metric-label">Số câu Đúng</span>
+                <strong class="metric-val" id="metricCorrectCount">0</strong>
+              </div>
+              <div class="metric-card metric-wrong">
+                <span class="metric-label">Số câu Sai</span>
+                <strong class="metric-val" id="metricWrongCount">0</strong>
+              </div>
+              <div class="metric-card metric-skipped">
+                <span class="metric-label">Bỏ trống</span>
+                <strong class="metric-val" id="metricSkippedCount">0</strong>
+              </div>
+              <div class="metric-card metric-time">
+                <span class="metric-label">Thời gian & Streak</span>
+                <strong class="metric-val" id="metricTimeAndStreak">00:00 • 🔥 0</strong>
+              </div>
+            </div>
+
+            <!-- Các nút hành động: Luyện tập lại câu sai / Làm lại toàn bộ / Đổi cấu hình -->
+            <div class="results-action-bar">
+              <button type="button" class="btn btn-primary" id="practiceIncorrectBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+                <span id="practiceIncorrectBtnText">Luyện lại các câu Sai & Bỏ trống (0)</span>
+              </button>
+
+              <button type="button" class="btn btn-secondary" id="retakeFullQuizBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                <span>Làm lại bộ câu hỏi này</span>
+              </button>
+
+              <button type="button" class="btn btn-ghost" id="backToSetupBtn">
+                <span>Thiết lập bài mới / Đổi file</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khu vực Xem lại chi tiết từng câu hỏi (Detailed Answer Review) -->
+      <div class="glass-card review-section-card">
+        <div class="review-header">
+          <div>
+            <h3 class="review-title">Chi tiết đáp án & Xem lại câu hỏi</h3>
+            <p class="review-subtitle">Đối chiếu đáp án bạn đã chọn với đáp án đúng từ tài liệu gốc.</p>
+          </div>
+
+          <!-- Bộ lọc và Tìm kiếm trong phần Xem lại -->
+          <div class="review-controls">
+            <div class="review-filter-pills" role="tablist" aria-label="Lọc câu hỏi xem lại">
+              <button type="button" class="filter-pill active" data-review-filter="all">Tất cả</button>
+              <button type="button" class="filter-pill" data-review-filter="wrong">Câu sai</button>
+              <button type="button" class="filter-pill" data-review-filter="skipped">Chưa làm</button>
+              <button type="button" class="filter-pill" data-review-filter="correct">Câu đúng</button>
+              <button type="button" class="filter-pill" data-review-filter="flagged">Đã đánh dấu</button>
+            </div>
+
+            <div class="review-search-wrap">
+              <input
+                type="search"
+                id="reviewSearchInput"
+                class="form-input form-input-sm"
+                placeholder="Tìm nội dung hoặc số câu gốc..."
+                aria-label="Tìm kiếm câu hỏi trong bảng kết quả"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Danh sách các thẻ câu hỏi Review (Render động bằng JS) -->
+        <div class="review-list" id="reviewListContainer"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================================
+       MODALS & DIALOGS (XÁC NHẬN NỘP BÀI, HƯỚNG DẪN ĐỊNH DẠNG, PHÍM TẮT)
+       ========================================================================= -->
+
+  <!-- 1. Modal Xác nhận Nộp bài (khi còn câu chưa trả lời) -->
+  <div class="modal-backdrop" id="confirmSubmitModal" hidden aria-hidden="true">
+    <div class="modal-dialog glass-card" role="dialog" aria-modal="true" aria-labelledby="confirmSubmitTitle">
+      <h3 id="confirmSubmitTitle" class="modal-title">Xác nhận nộp bài?</h3>
+      <p class="modal-desc" id="confirmSubmitMessage">
+        Bạn vẫn còn một số câu hỏi chưa chọn đáp án. Bạn có chắc chắn muốn kết thúc bài làm ngay bây giờ không?
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelSubmitBtn">Quay lại làm tiếp</button>
+        <button type="button" class="btn btn-primary" id="confirmSubmitFinalBtn">Nộp bài ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Modal Hướng dẫn Định dạng File Word (.docx) -->
+  <div class="modal-backdrop" id="formatGuideModal" hidden aria-hidden="true">
+    <div class="modal-dialog modal-lg glass-card" role="dialog" aria-modal="true" aria-labelledby="formatGuideTitle">
+      <div class="modal-header">
+        <h3 id="formatGuideTitle" class="modal-title">Quy chuẩn định dạng File câu hỏi (.docx / .txt)</h3>
+        <button type="button" class="btn-icon modal-close-btn" data-close-modal="formatGuideModal" aria-label="Đóng">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Hệ thống tự động nhận diện câu hỏi trắc nghiệm 4 lựa chọn theo định dạng chuẩn sau:</p>
+        <pre class="code-sample"><code>'Phần 1: Các khái niệm cơ bản
+Câu 1. Ai là người đầu tiên đề xuất sử dụng thuật ngữ “Data Science”?
+A. William S. Cleveland
+*B. Chien-Fu Jeff Wu
+C. DJ Patil
+D. John Tukey
+
+Câu 2: Dữ liệu có cấu trúc thường được lưu trữ ở đâu?
+A. File văn bản tự do
+*B. Cơ sở dữ liệu quan hệ (SQL)
+C. Ảnh và video
+D. Âm thanh</code></pre>
+        <ul class="guide-rules-list">
+          <li><strong>Câu hỏi:</strong> Bắt đầu bằng <code>Câu X.</code> hoặc <code>Câu X:</code> (hỗ trợ cả trường hợp đánh số lặp lại giữa các phần).</li>
+          <li><strong>Đáp án:</strong> Gồm 4 lựa chọn <code>A.</code>, <code>B.</code>, <code>C.</code>, <code>D.</code> trên từng dòng.</li>
+          <li><strong>Đáp án đúng:</strong> Đặt dấu sao <code>*</code> ngay trước chữ cái của đáp án đúng (ví dụ: <code>*A.</code> hoặc <code>*B.</code>).</li>
+          <li><strong>Phân chia phần (Tùy chọn):</strong> Dòng bắt đầu bằng <code>Phần X:</code> hoặc <code>'Phần X:</code> sẽ được gom nhóm tự động.</li>
+        </ul>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" data-close-modal="formatGuideModal">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Modal Phím tắt Bàn phím -->
+  <div class="modal-backdrop" id="shortcutsModal" hidden aria-hidden="true">
+    <div class="modal-dialog glass-card" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
+      <div class="modal-header">
+        <h3 id="shortcutsTitle" class="modal-title">Phím tắt điều khiển nhanh</h3>
+        <button type="button" class="btn-icon modal-close-btn" data-close-modal="shortcutsModal" aria-label="Đóng">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcuts-list">
+          <div class="shortcut-row"><span>Chọn đáp án A, B, C, D</span><span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> hoặc <kbd>A</kbd> <kbd>B</kbd> <kbd>C</kbd> <kbd>D</kbd></span></div>
+          <div class="shortcut-row"><span>Câu tiếp theo</span><span><kbd>→</kbd> hoặc <kbd>Enter</kbd></span></div>
+          <div class="shortcut-row"><span>Câu trước đó</span><span><kbd>←</kbd></span></div>
+          <div class="shortcut-row"><span>Đánh dấu câu phân vân</span><span><kbd>F</kbd></span></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" data-close-modal="shortcutsModal">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       TOAST NOTIFICATION CONTAINER
+       ========================================================================= -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
